@@ -1,0 +1,13 @@
+version: '3'
+volumes:
+  psql:
+services:
+  psql:
+    image: postgres:16.0 
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: c1Rt3X66rGi5flJypblB # only do this in development
+    volumes:
+      - psql:/var/lib/postgresql/data # save data between restarts
+    ports:
+      - 5555:5432 # binds port 5555 on your computer to the postgres port!
