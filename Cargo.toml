@@ -1,5 +1,5 @@
 [package]
-name = "funny_endponts"
+name = "funny_endpoints"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,19 +7,21 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.31"
+serde = { version = "1.0.188", features = ["derive"] }
 serde_json = "1.0.107"
 rocket = { version = "0.5.0-rc.3", features = [ "json" ] }
-uuid = "1.4.1"
-serde = { version = "1.0.188", features = ["derive"] }
-sqlx = { version= "0.7.2", features = ["macros", "migrate", "runtime-tokio-rustls", "postgres"] }
-dotenv = "0.15.0"
-tokio = { version = "1.33.0", features = ["full"] }
 sea-orm-rocket = "0.5.2"
 sea-orm = { version="0.12.3", features=["runtime-tokio-native-tls", "sqlx-postgres", "macros"] }
 async-trait = { version = "0.1" }
 entity = { path = "entity" }
 migration = { path = "migration" }
-rocket_db_pools = {version= "0.1.0-rc.3", features= ["sqlx_postgres"]} 
+
+uuid = "1.4.1"
+
+# rocket_db_pools = {version= "0.1.0-rc.3", features= ["sqlx_postgres"]} 
+# sqlx = { version= "0.7.2", features = ["macros", "migrate", "runtime-tokio-rustls", "postgres"] }
+# dotenv = "0.15.0"
+# tokio = { version = "1.33.0", features = ["full"] }
 
 
 
