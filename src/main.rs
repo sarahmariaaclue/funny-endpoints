@@ -1,65 +1,35 @@
-use controller::beer_controller::BeerBrand;
-use serde::{Deserialize, Serialize};
-use sqlx::postgres::PgPoolOptions;
-
 #[macro_use]
 extern crate rocket;
+
+use rocket_db_pools::sqlx::{self, Row};
+use rocket_db_pools::{Connection, Database};
+use serde::{Deserialize, Serialize};
 
 mod controller;
 mod persistence;
 mod service;
 
-// #[launch]
-// fn rocket() -> _ {
-//     rocket::build()
-//         .mount(
-//             "/",
-//             routes![
-//                 controller::beer_controller::root,
-//                 controller::beer_controller::is_time_for_beer,
-//                 controller::beer_controller::create_beer_brand,
-//                 controller::beer_controller::get_beer_brands
-//             ],
-//         )
-//         .mount(
-//             "/drinks",
-//             routes![controller::drink_controller::get_all_drinks],
-//         )
-// }
+#[derive(Database)]
+#[database("funny_endpoints")]
+pub struct FunnyEndpointsDatabase(sqlx::PgPool);
 
-#[tokio::main]
-async fn main() {
-    dotenv::dotenv().expect("Unable to load environment variables from .env file");
-
-    let db_url = std::env::var("DATABASE_URL").expect("Unable to read DATABASE_URL env var");
-
-    let pool = PgPoolOptions::new()
-        .max_connections(100)
-        .connect(&db_url)
-        .await
-        .expect("Unable to connect to Postgres");
-
-    let inserted: Vec<BeerBrandEntity> = sqlx::query_as!(
-        BeerBrandEntity,
-        "insert into beer_brand(id, name, city) values ($1, $2, $3) returning *",
-        3, // TODO auto id??
-        "Ratsherrn",
-        "Hamburg"
-    )
-    .fetch_all(&pool)
-    .await
-    .expect("Unable to insert a domain");
-
-    println!("inserted: {:?}", inserted);
-
-    let beer_brands: Vec<BeerBrandEntity> =
-        sqlx::query_as!(BeerBrandEntity, "select * from beer_brand")
-            .fetch_all(&pool)
-            .await
-            .expect("Unable to query beer brand table");
-
-    println!("There are in db: {} beer_brands.", beer_brands.len());
-    println!("found in db: {:?}", beer_brands);
+#[launch]
+fn rocket() -> _ {
+    rocket::build()
+        .attach(FunnyEndpointsDatabase::init())
+        .mount(
+            "/",
+            routes![
+                controller::beer_controller::root,
+                controller::beer_controller::is_time_for_beer,
+                controller::beer_controller::create_beer_brand,
+                controller::beer_controller::get_beer_brands
+            ],
+        )
+        .mount(
+            "/drinks",
+            routes![controller::drink_controller::get_all_drinks],
+        )
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -72,7 +42,7 @@ pub struct BeerBrandEntity {
 
 /*
 TODO
-- use Json in Rest
+
 - Tests
 - database, evtl verschiedene postgres, mongodb
 - ...

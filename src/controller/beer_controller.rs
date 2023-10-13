@@ -3,8 +3,10 @@ use std::{
     io::{BufRead, BufReader, Write},
 };
 
-use crate::service::beer_service::TimeForBeerResponse;
+use crate::{service::beer_service::TimeForBeerResponse, BeerBrandEntity, FunnyEndpointsDatabase};
 use rocket::serde::json::Json;
+use rocket_db_pools::sqlx::Row;
+use rocket_db_pools::Connection;
 use serde::{Deserialize, Serialize};
 
 const FILE_PATH: &str = "brands.txt";
@@ -26,42 +28,18 @@ pub fn create_beer_brand(new_beer_brand: Json<BeerBrand>) -> &'static str {
         &new_beer_brand.name, &new_beer_brand.city
     );
 
-    // file, delete code later:
-    let mut brands = OpenOptions::new()
-        .read(true)
-        .append(true)
-        .create(true)
-        .open(FILE_PATH)
-        .expect("unable to access brands.txt");
-    let brand_string = format!("{} from {}\n", new_beer_brand.name, new_beer_brand.city);
-    let brand_bytes = brand_string.as_bytes();
-    brands
-        .write(brand_bytes)
-        .expect("unable to write to barnds.txt");
-    "Brand added succesfully"
+    "saved!"
 }
 
 #[get("/beer-brands")]
-pub fn get_beer_brands() -> Json<Vec<String>> {
-    let file = OpenOptions::new()
-        .read(true)
-        .append(true)
-        .create(true)
-        .open(FILE_PATH)
-        .expect("unable to access barnds.txt");
-    let reader = BufReader::new(file);
-    Json(
-        reader
-            .lines()
-            .map(|line| line.expect("could not read line"))
-            .collect(),
-    )
-
-    // let karlsberg = BeerBrand {
-    //     name: "Karlsberg".into(),
-    //     city: "Homburg".into(),
-    // };
-    // Json(vec![karlsberg])
+pub async fn get_beer_brands(db: Connection<FunnyEndpointsDatabase>) -> Json<Vec<BeerBrand>> {
+    let res = sqlx::query("SELECT content FROM beer_brand").fetch_all(&mut **db);
+    let karlsberg = BeerBrand {
+        id: 56,
+        name: "Karlsberg".into(),
+        city: "Homburg".into(),
+    };
+    Json(vec![karlsberg])
 }
 
 #[derive(Debug, Deserialize, Serialize)]

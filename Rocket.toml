@@ -1,0 +1,2 @@
+[default.databases.funny_endpoints]
+url = "postgres://postgres:c1Rt3X66rGi5flJypblB@localhost:5555/funny_endpoints"
