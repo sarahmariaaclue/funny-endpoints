@@ -25,9 +25,9 @@ async fn rocket() -> _ {
                 controller::beer_controller::is_time_for_beer,
                 controller::beer_controller::get_beer_brands,
                 controller::beer_controller::get_beer_brand,
-                // controller::beer_controller::create_beer_brand,
-                // controller::beer_controller::update_beer_brand,
-                // controller::beer_controller::delete_beer_brand,
+                controller::beer_controller::create_beer_brand,
+                controller::beer_controller::update_beer_brand,
+                controller::beer_controller::delete_beer_brand,
             ],
         )
         .mount(
@@ -41,10 +41,8 @@ TODO
 
 - Tests
 - database, evtl verschiedene postgres, mongodb
+- readme
 - ...
-
-rustup default nightly --> wird für rocket gebraucht?!?!??!!!!
-rustup default stable
 
 docker run --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres
 docker run --name funny-endpoints-postgres -e POSTGRES_PASSWORD=c1Rt3X66rGi5flJypblB -d postgres -p 5555:5432
