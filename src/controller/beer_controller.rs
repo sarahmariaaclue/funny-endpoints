@@ -1,14 +1,10 @@
-use std::i64;
-
 use crate::{service::beer_service::TimeForBeerResponse, FunnyEndpointsDB};
 
 use rocket::serde::json::Json;
 use rocket_db_pools::Connection;
 use serde::{Deserialize, Serialize};
 use sqlx::Error;
-use sqlx::{self, postgres::PgRow};
-
-use rocket_db_pools::sqlx::Row;
+use sqlx::{self};
 
 #[get("/")]
 pub fn root() -> String {
@@ -21,67 +17,35 @@ pub fn is_time_for_beer() -> Json<TimeForBeerResponse> {
 }
 
 #[get("/beer-brands")]
-pub async fn get_beer_brands(mut connection: Connection<FunnyEndpointsDB>) -> Option<String> {
-    // Json<Vec<BeerBrandEntity>>
-    // TODO
-    //Json([].to_vec())
-    let result: Result<Vec<PgRow>, Error> = sqlx::query("SELECT * FROM beer_brand")
-        .fetch_all(&mut *connection)
-        .await
-        .and_then(|r| Ok(r));
+pub async fn get_beer_brands(
+    mut connection: Connection<FunnyEndpointsDB>,
+) -> Option<Json<Vec<BeerBrandEntity>>> {
+    let result: Result<Vec<BeerBrandEntity>, Error> =
+        sqlx::query_as::<_, BeerBrandEntity>("SELECT * FROM beer_brand")
+            .fetch_all(&mut *connection)
+            .await
+            .and_then(|r| Ok(r));
     let result2 = result.expect("msg");
 
-    let result3 = result2.len();
-
-    Some(result3.to_string())
-
-    //result.ok().map(|s| String(s))
+    Some(Json(result2))
 }
 
-// querys the database for the beer brand with id=id
-// returns the beer brand as an optional
 #[get("/beer-brand/<id>")]
 pub async fn get_beer_brand(
     id: i64,
     mut connection: Connection<FunnyEndpointsDB>,
-) -> Option<String> {
-    // Option<Json<BeerBrandEntity>>
-    sqlx::query("SELECT * FROM beer_brand WHERE id = ?")
+) -> Option<Json<BeerBrandEntity>> {
+    sqlx::query_as::<_, BeerBrandEntity>("SELECT * FROM beer_brand WHERE id = $1")
         .bind(id)
-        .fetch_one(&mut *connection)
+        .fetch_optional(&mut *connection)
         .await
-        .and_then(|r| Ok(r.try_get(0)?))
         .ok()
-    // TODO: sqlx neuste version!!
-
-    // Some(Json(BeerBrandEntity {
-    //     id: id,
-    //     name: "bestBeer".into(),
-    //     city: "Wemmezuela".into(),
-    // }))
+        .flatten()
+        .map(Json)
 }
 
-// #[get("/beer-brand/<id>")]
-// pub async fn get_beer_brand(
-//     mut connection: Connection<FunnyEndpointsDB>,
-//     id: i64,
-// ) -> Option<String> {
-//     print!("id is {}", id);
-//     // sqlx::query("SELECT * FROM beer_brand WHERE id = ?")
-//     // .bind(id)
-//     // query the beer brand with id from the database
-//     sqlx::query_as!(
-//         BeerBrandEntity,
-//         "SELECT * FROM beer_brand WHERE id = $1", // TODO : Check postgres database url
-//         id
-//     )
-//     .fetch_optional(&mut *connection)
-//     .await
-//     .and_then(|r| Ok(r.try_get(0)?))
-//     .ok()
-// }
-
 #[derive(Serialize, Deserialize, Clone, Debug, sqlx::FromRow)]
+// TODO beim Hochfahren der Andendung create table if not exists
 pub struct BeerBrandEntity {
     id: i64,
     name: String,
