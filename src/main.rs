@@ -26,15 +26,15 @@ async fn rocket() -> _ {
         .mount(
             "/",
             routes![
-                controller::beer_controller::root,
-                controller::beer_controller::is_time_for_beer,
-                controller::beer_controller::get_beer_brands,
-                controller::beer_controller::get_beer_brand,
-                controller::beer_controller::create_beer_brand,
-                controller::beer_controller::update_beer_brand,
-                controller::beer_controller::delete_beer_brand,
+                controller::start_controller::root,
+                controller::start_controller::is_time_for_beer,
+                controller::beer_brand_controller::get_beer_brands,
+                controller::beer_brand_controller::get_beer_brand,
+                controller::beer_brand_controller::create_beer_brand,
+                controller::beer_brand_controller::update_beer_brand,
+                controller::beer_brand_controller::delete_beer_brand,
             ],
-        )
+        ) // /beer_brand
         .mount(
             "/drinks",
             routes![controller::drink_controller::get_all_drinks],

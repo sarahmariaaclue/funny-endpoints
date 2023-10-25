@@ -1,9 +1,9 @@
-use crate::{service::beer_service::TimeForBeerResponse, FunnyEndpointsDB};
+use crate::persistence::beer_brand_persistence::BeerBrandEntity;
+use crate::FunnyEndpointsDB;
 
 use rocket::serde::json::Json;
 use rocket_db_pools::Connection;
 use serde::{Deserialize, Serialize};
-use sqlx::Error;
 use sqlx::{self};
 
 use rocket::http::Status;
@@ -11,29 +11,18 @@ use rocket::request::Request;
 use rocket::response::{Responder, Response};
 use std::i64;
 use std::io::Cursor;
-
-#[get("/")]
-pub fn root() -> String {
-    "Moin!\n\navailable endpoints: \n/drinks  \n/beer-time".into()
-}
-
-#[get("/beer-time")]
-pub fn is_time_for_beer() -> Json<TimeForBeerResponse> {
-    Json(crate::service::beer_service::time_for_beer())
-}
+// TODO datenbanck kram auslagern in repository
+// TODO Fehlerbehandlung
 
 #[get("/beer-brands")]
 pub async fn get_beer_brands(
-    mut connection: Connection<FunnyEndpointsDB>, // TODO Pool
+    mut connection: Connection<FunnyEndpointsDB>,
 ) -> Option<Json<Vec<BeerBrandEntity>>> {
-    let result: Result<Vec<BeerBrandEntity>, Error> =
-        sqlx::query_as::<_, BeerBrandEntity>("SELECT * FROM beer_brand")
-            .fetch_all(&mut *connection)
-            .await
-            .and_then(|r| Ok(r));
-    let result2 = result.expect("msg");
-
-    Some(Json(result2))
+    let result = sqlx::query_as::<_, BeerBrandEntity>("SELECT * FROM beer_brand")
+        .fetch_all(&mut *connection)
+        .await
+        .ok()?;
+    Some(Json(result))
 }
 
 #[get("/beer-brand/<id>")]
@@ -41,13 +30,13 @@ pub async fn get_beer_brand(
     id: i64,
     mut connection: Connection<FunnyEndpointsDB>,
 ) -> Option<Json<BeerBrandEntity>> {
-    sqlx::query_as::<_, BeerBrandEntity>("SELECT * FROM beer_brand WHERE id = $1")
+    let result = sqlx::query_as::<_, BeerBrandEntity>("SELECT * FROM beer_brand WHERE id = $1")
         .bind(id)
         .fetch_optional(&mut *connection)
         .await
-        .ok()
-        .flatten()
-        .map(Json)
+        .ok()?
+        .map(Json)?;
+    Some(result)
 }
 
 #[post("/beer-brand", data = "<beer_brand>")]
@@ -75,9 +64,9 @@ pub async fn update_beer_brand(
     let result = sqlx::query_as::<_, BeerBrandEntity>(
         "UPDATE beer_brand SET name = $2, city = $3 WHERE id= $1 RETURNING *",
     )
-    .bind(&beer_brand_entity.id)
-    .bind(&beer_brand_entity.name)
-    .bind(&beer_brand_entity.city)
+    .bind(beer_brand_entity.get_id())
+    .bind(beer_brand_entity.get_name())
+    .bind(beer_brand_entity.get_city())
     .fetch_one(&mut *connection)
     .await
     .map_err(DatabaseError)?;
@@ -98,14 +87,6 @@ pub async fn delete_beer_brand(
             .map_err(DatabaseError)?;
 
     Ok(Json(result))
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, sqlx::FromRow)]
-// TODO beim Hochfahren der Andendung create table if not exists
-pub struct BeerBrandEntity {
-    id: i64,
-    name: String,
-    city: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, sqlx::FromRow)]

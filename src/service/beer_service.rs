@@ -2,17 +2,13 @@ use chrono::naive::NaiveTime;
 use chrono::offset::Local;
 use serde::{Deserialize, Serialize};
 
-pub fn time_for_beer() -> TimeForBeerResponse {
+pub fn time_for_beer() -> TimeForBeerInformation {
     let time_format = "%H:%M";
-
     let now = Local::now().naive_local().time();
-    println!("Now it is {} o'clock", &now.format(time_format));
-
     let beer_starting_time = NaiveTime::from_hms_opt(16, 00, 00).unwrap();
-
     let message = receive_beer_message(now > beer_starting_time);
 
-    TimeForBeerResponse {
+    TimeForBeerInformation {
         actual_time: now.format(time_format).to_string(),
         beer_starting_time: beer_starting_time.format(time_format).to_string(),
         message: message,
@@ -27,9 +23,20 @@ fn receive_beer_message(time_for_beer: bool) -> String {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct TimeForBeerResponse {
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+pub struct TimeForBeerInformation {
     actual_time: String,
     beer_starting_time: String,
-    pub message: String, // TODO nicht public
+    message: String,
+}
+
+// TODO remove, just for test
+impl TimeForBeerInformation {
+    pub fn new_epty() -> TimeForBeerInformation {
+        TimeForBeerInformation {
+            actual_time: "".to_string(),
+            beer_starting_time: "".to_string(),
+            message: "".to_string(),
+        }
+    }
 }
