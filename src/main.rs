@@ -5,6 +5,10 @@ mod controller;
 mod persistence;
 mod service;
 
+use rocket::fairing;
+use rocket::fairing::AdHoc;
+use rocket::Build;
+use rocket::Rocket;
 use rocket_db_pools::sqlx;
 use rocket_db_pools::Database;
 
@@ -18,6 +22,7 @@ pub struct FunnyEndpointsDB(sqlx::Pool<Postgres>);
 async fn rocket() -> _ {
     rocket::build()
         .attach(FunnyEndpointsDB::init())
+        .attach(AdHoc::try_on_ignite("SQLx Migrations", run_migrations))
         .mount(
             "/",
             routes![
@@ -34,6 +39,19 @@ async fn rocket() -> _ {
             "/drinks",
             routes![controller::drink_controller::get_all_drinks],
         )
+}
+
+async fn run_migrations(rocket: Rocket<Build>) -> fairing::Result {
+    match FunnyEndpointsDB::fetch(&rocket) {
+        Some(db) => match sqlx::migrate!("db/migrations").run(&**db).await {
+            Ok(_) => Ok(rocket),
+            Err(e) => {
+                error!("Failed to initialize SQLx database: {}", e);
+                Err(rocket)
+            }
+        },
+        None => Err(rocket),
+    }
 }
 
 /*

@@ -78,7 +78,7 @@ pub async fn update_beer_brand(
     .bind(&beer_brand_entity.id)
     .bind(&beer_brand_entity.name)
     .bind(&beer_brand_entity.city)
-    .fetch_one(&mut *connection) //TODO: Frage, watum hier *
+    .fetch_one(&mut *connection)
     .await
     .map_err(DatabaseError)?;
 
