@@ -19,4 +19,8 @@ impl BeerBrandEntity {
     pub fn get_city(&self) -> &str {
         &self.city
     }
+    // TODO nur für tests, remove
+    pub fn create(id: i64, name: String, city: String) -> Self {
+        Self { id, name, city }
+    }
 }

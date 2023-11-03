@@ -14,6 +14,7 @@ use rocket_db_pools::Database;
 
 use sqlx::Postgres;
 
+// TODO in Repo / persistance/ config? auslagern?
 #[derive(Database)]
 #[database("funny_endpoints")]
 pub struct FunnyEndpointsDB(sqlx::Pool<Postgres>);
@@ -53,16 +54,3 @@ async fn run_migrations(rocket: Rocket<Build>) -> fairing::Result {
         None => Err(rocket),
     }
 }
-
-/*
-TODO
-
-- Tests
-- database, evtl verschiedene postgres, mongodb
-- readme
-- ...
-
-docker run --name some-postgres -e POSTGRES_PASSWORD=mysecretpassword -d postgres
-docker run --name funny-endpoints-postgres -e POSTGRES_PASSWORD=c1Rt3X66rGi5flJypblB -d postgres -p 5555:5432
-
-*/
